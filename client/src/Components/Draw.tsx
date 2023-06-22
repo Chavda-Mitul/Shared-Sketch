@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Stage, Layer, Line, Text } from "react-konva";
 import { io } from "socket.io-client";
 
@@ -62,7 +62,7 @@ const Draw = () => {
   }, []);
 
   return (
-    <div>
+    <div style={{ border: "2px solid red" }}>
       <select
         value={tool}
         onChange={(e) => {
@@ -72,16 +72,13 @@ const Draw = () => {
         <option value="pen">Pen</option>
         <option value="eraser">Eraser</option>
       </select>
-      <select
+
+      <input
+        type="color"
+        id="colorpicker"
         value={color}
-        onChange={(e) => {
-          setColor(e.target.value);
-        }}
-      >
-        <option value="black">Black</option>
-        <option value="red">Red</option>
-        <option value="green">Green</option>
-      </select>
+        onChange={(e) => setColor(e.target.value)}
+      />
       <Stage
         width={window.innerWidth}
         height={window.innerHeight}
@@ -91,7 +88,7 @@ const Draw = () => {
         onMouseUp={handleMouseUp}
       >
         <Layer>
-          <Text text="Just start drawing" x={5} y={30} />
+          <Text text="Just start drawing" x={650} y={30} />
           {lines.map((line, i) => (
             <Line
               key={i}
