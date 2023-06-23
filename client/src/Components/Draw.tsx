@@ -14,7 +14,9 @@ const Draw = () => {
   const stageRef = useRef<any>(null);
   const isDrawing = useRef<boolean>(false);
   const socket = useRef<any>(null);
-  const [color, setColor] = useState("black");
+  const [color, setColor] = useState("#000000");
+  const [penSize, setPenSize] = useState<number>(4);
+  const [room, setRoom] = useState("");
 
   const handleMouseDown = () => {
     isDrawing.current = true;
@@ -44,12 +46,14 @@ const Draw = () => {
 
   const handleMouseUp = () => {
     isDrawing.current = false;
-    socket.current.emit("drawing", lines);
+    socket.current.emit("drawing", lines, room);
+  };
+  const sendRoomName = (room: string) => {
+    socket.current.emit("joinRoom", room);
   };
 
   useEffect(() => {
     socket.current = io("http://localhost:3000");
-
     return () => {
       socket.current.disconnect();
     };
@@ -72,6 +76,15 @@ const Draw = () => {
         <option value="pen">Pen</option>
         <option value="eraser">Eraser</option>
       </select>
+      <select
+        value={penSize}
+        onChange={(e) => {
+          setPenSize(Number(e.target.value));
+        }}
+      >
+        <option value={10}>10</option>
+        <option value={20}>15</option>
+      </select>
 
       <input
         type="color"
@@ -79,6 +92,12 @@ const Draw = () => {
         value={color}
         onChange={(e) => setColor(e.target.value)}
       />
+      <input
+        type="text"
+        value={room}
+        onChange={(e) => setRoom(e.target.value)}
+      />
+      <button onClick={() => sendRoomName(room)}>connect</button>
       <Stage
         width={window.innerWidth}
         height={window.innerHeight}
@@ -94,7 +113,7 @@ const Draw = () => {
               key={i}
               points={line.points}
               stroke={line.color}
-              strokeWidth={4}
+              strokeWidth={penSize}
               tension={0.5}
               lineCap="round"
               lineJoin="round"
