@@ -51,6 +51,9 @@ const Draw = () => {
   const sendRoomName = (room: string) => {
     socket.current.emit("joinRoom", room);
   };
+  const clearAll = () => {
+    socket.current.emit("clear", lines, room);
+  };
 
   useEffect(() => {
     socket.current = io("http://localhost:3000");
@@ -98,6 +101,7 @@ const Draw = () => {
         onChange={(e) => setRoom(e.target.value)}
       />
       <button onClick={() => sendRoomName(room)}>connect</button>
+      <button onClick={clearAll}>Clear</button>
       <Stage
         width={window.innerWidth}
         height={window.innerHeight}

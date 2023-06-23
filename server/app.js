@@ -27,6 +27,15 @@ io.on("connection", (socket) => {
     socket.join(roomid);
   });
 
+  socket.on("clear", (lines, roomId) => {
+    lines = [];
+    if (roomId == "") socket.emit("drawing", []);
+    else {
+      socket.to(roomId).emit("drawing", []);
+      socket.emit("drawing", []);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("Client disconnected");
   });
