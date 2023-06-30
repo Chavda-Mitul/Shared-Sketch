@@ -12,8 +12,10 @@ app.use(cors());
 const io = socketIO(server, {
   cors: {
     origin: ["*", "http://localhost:5173"],
+    methods: ["GET", "POST"],
   },
 });
+app.get("/", (req, res) => res.send("server runnning"));
 
 io.on("connection", (socket) => {
   console.log("New client connected");
@@ -53,7 +55,7 @@ io.on("connection", (socket) => {
   });
 });
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
