@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Stage, Layer, Line, Text } from "react-konva";
 import { io } from "socket.io-client";
+import AudioChat from "./AudioChat";
 
 type LineData = {
   tool: string;
@@ -17,6 +18,7 @@ const Draw = () => {
   const [color, setColor] = useState("#000000");
   const [penSize, setPenSize] = useState<number>(4);
   const [room, setRoom] = useState("");
+  const [isConnected, setIsConnected] = useState<boolean>(false);
 
   const handleMouseDown = () => {
     isDrawing.current = true;
@@ -50,6 +52,7 @@ const Draw = () => {
   };
   const sendRoomName = (room: string) => {
     socket.current.emit("joinRoom", room);
+    setIsConnected(true);
   };
   const clearAll = () => {
     socket.current.emit("clear", lines, room);
@@ -128,6 +131,13 @@ const Draw = () => {
           ))}
         </Layer>
       </Stage>
+      {socket.current && (
+        <AudioChat
+          socket={socket.current}
+          room={room}
+          isConnected={isConnected}
+        />
+      )}
     </div>
   );
 };

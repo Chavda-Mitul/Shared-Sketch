@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const socketIO = require("socket.io");
 const cors = require("cors");
+const { log } = require("console");
 
 const app = express();
 const server = http.createServer(app);
@@ -20,7 +21,7 @@ io.on("connection", (socket) => {
   socket.on("drawing", (lines, roomId) => {
     // console.log(lines);
     // if (roomId === "") io.emit("drawing", lines);
-    if (roomId != "") socket.to(roomId).emit("drawing", lines);
+    if (roomId !== "") socket.to(roomId).emit("drawing", lines);
   });
 
   socket.on("joinRoom", (roomid) => {
@@ -34,6 +35,17 @@ io.on("connection", (socket) => {
       socket.to(roomId).emit("drawing", []);
       socket.emit("drawing", []);
     }
+  });
+  socket.on("iceCandidate", (candidate, roomId) => {
+    socket.broadcast.to(roomId).emit("iceCandidate", candidate);
+  });
+
+  socket.on("call", (offer, roomId) => {
+    socket.broadcast.to(roomId).emit("call", offer);
+  });
+
+  socket.on("answer", (answer, roomId) => {
+    socket.broadcast.to(roomId).emit("answer", answer);
   });
 
   socket.on("disconnect", () => {
