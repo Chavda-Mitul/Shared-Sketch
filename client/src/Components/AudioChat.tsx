@@ -5,10 +5,12 @@ function AudioChat({ socket, room, isConnected }) {
   const localAudioRef = useRef(null);
 
   useEffect(() => {
+    let stream;
+
     navigator.mediaDevices
       .getUserMedia({ audio: true })
-      .then((stream) => {
-        localAudioRef.current.srcObject = stream;
+      .then((mediaStream) => {
+        stream = mediaStream;
 
         const audioTracks = stream.getAudioTracks();
         const audioSender = new RTCPeerConnection();
@@ -17,11 +19,11 @@ function AudioChat({ socket, room, isConnected }) {
           audioSender.addTrack(track, stream);
         });
 
-        audioSender.onicecandidate((event) => {
+        audioSender.onicecandidate = (event) => {
           if (event.candidate) {
             socket.emit("iceCandidate", event.candidate, room);
           }
-        });
+        };
 
         socket.on("iceCandidate", (candidate, room) => {
           audioSender.addIceCandidate(new RTCIceCandidate(candidate));
@@ -44,13 +46,29 @@ function AudioChat({ socket, room, isConnected }) {
         socket.on("answer", (answer, room) => {
           audioSender.setRemoteDescription(new RTCSessionDescription(answer));
         });
+
+        localAudioRef.current.srcObject = stream;
       })
       .catch((error) => {
         console.error("Error accessing microphone:", error);
       });
+
+    return () => {
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach((track) => track.stop());
+      }
+    };
   }, []);
+
   return (
-    <>{isConnected ? <audio ref={localAudioRef} autoPlay controls /> : null}</>
+    <audio
+      key={room}
+      ref={localAudioRef}
+      autoPlay
+      controls
+      muted={!isConnected}
+    />
   );
 }
 
