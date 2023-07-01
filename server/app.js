@@ -39,15 +39,18 @@ io.on("connection", (socket) => {
     }
   });
   socket.on("iceCandidate", (candidate, roomId) => {
+    console.log("c", candidate);
     socket.broadcast.to(roomId).emit("iceCandidate", candidate);
   });
 
   socket.on("call", (offer, roomId) => {
+    console.log(offer);
     socket.broadcast.to(roomId).emit("call", offer);
   });
 
   socket.on("answer", (answer, roomId) => {
     socket.broadcast.to(roomId).emit("answer", answer);
+    console.log(answer);
   });
 
   socket.on("disconnect", () => {

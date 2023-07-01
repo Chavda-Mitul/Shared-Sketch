@@ -59,7 +59,7 @@ const Draw = () => {
   };
 
   useEffect(() => {
-    socket.current = io("http://localhost:3000");
+    socket.current = io("https://server1-zfqe.onrender.com");
     return () => {
       socket.current.disconnect();
     };
