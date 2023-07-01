@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Stage, Layer, Line, Text } from "react-konva";
 import { io } from "socket.io-client";
 import AudioChat from "./AudioChat";
@@ -14,6 +14,7 @@ const Draw = () => {
   const [lines, setLines] = useState<LineData[]>([]);
   const stageRef = useRef<any>(null);
   const isDrawing = useRef<boolean>(false);
+  const touchRef = useRef<any>(null); // Ref to keep track of touch events
   const socket = useRef<any>(null);
   const [color, setColor] = useState("#000000");
   const [penSize, setPenSize] = useState<number>(4);
@@ -50,16 +51,52 @@ const Draw = () => {
     isDrawing.current = false;
     socket.current.emit("drawing", lines, room);
   };
+
+  // Event handlers for touch events
+  const handleTouchStart = (e: TouchEvent) => {
+    e.preventDefault();
+    touchRef.current = e.touches[0];
+    const stage = stageRef.current;
+    const pos = stage.getPointerPosition();
+    const newLine = { tool, points: [pos.x, pos.y], color };
+    setLines((prevLines) => [...prevLines, newLine]);
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    e.preventDefault();
+    if (!touchRef.current) {
+      return;
+    }
+    const stage = stageRef.current;
+    const point = stage.getPointerPosition();
+    const lastLine = lines[lines.length - 1];
+    const updatedLastLine = {
+      ...lastLine,
+      points: lastLine.points
+        ? lastLine.points.concat([point.x, point.y])
+        : [point.x, point.y],
+    };
+    const updatedLines = [...lines];
+    updatedLines.splice(lines.length - 1, 1, updatedLastLine);
+    setLines(updatedLines);
+  };
+
+  const handleTouchEnd = () => {
+    touchRef.current = null;
+    socket.current.emit("drawing", lines, room);
+  };
+
   const sendRoomName = (room: string) => {
     socket.current.emit("joinRoom", room);
     setIsConnected(true);
   };
+
   const clearAll = () => {
     socket.current.emit("clear", lines, room);
   };
 
   useEffect(() => {
-    socket.current = io("http://localhost:3000");
+    socket.current = io("https://server1-zfqe.onrender.com");
     return () => {
       socket.current.disconnect();
     };
@@ -70,6 +107,20 @@ const Draw = () => {
       setLines(syncLines);
     });
   }, []);
+
+  useEffect(() => {
+    // Add event listeners for touch events
+    const stage = stageRef.current;
+    stage.addEventListener("touchstart", handleTouchStart);
+    stage.addEventListener("touchmove", handleTouchMove);
+    stage.addEventListener("touchend", handleTouchEnd);
+    return () => {
+      // Remove event listeners on component unmount
+      stage.removeEventListener("touchstart", handleTouchStart);
+      stage.removeEventListener("touchmove", handleTouchMove);
+      stage.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [lines]);
 
   return (
     <div style={{ border: "2px solid red" }}>
