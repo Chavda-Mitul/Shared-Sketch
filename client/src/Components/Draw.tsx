@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Stage, Layer, Line, Text } from "react-konva";
 import { io } from "socket.io-client";
-import AudioChat from "./AudioChat";
-
 type LineData = {
   tool: string;
   points: number[];
@@ -19,7 +17,10 @@ const Draw = () => {
   const [penSize, setPenSize] = useState<number>(4);
   const [room, setRoom] = useState("");
   const [isConnected, setIsConnected] = useState<boolean>(false);
-
+  // --
+  const localAudioRef = useRef(null);
+  const audioSenderRef = useRef(null);
+  // --
   const handleMouseDown = () => {
     isDrawing.current = true;
     const stage = stageRef.current;
@@ -70,6 +71,91 @@ const Draw = () => {
       setLines(syncLines);
     });
   }, []);
+
+  useEffect(() => {
+    let stream;
+
+    const createAudioConnection = () => {
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then((mediaStream) => {
+          stream = mediaStream;
+
+          const audioTracks = stream.getAudioTracks();
+          audioSenderRef.current = new RTCPeerConnection();
+
+          audioTracks.forEach((track) => {
+            audioSenderRef.current.addTrack(track, stream);
+          });
+
+          audioSenderRef.current.onicecandidate = (event) => {
+            if (event.candidate) {
+              socket.current.emit("iceCandidate", event.candidate, room);
+            }
+          };
+
+          socket.current.on("iceCandidate", (candidate, room) => {
+            console.log("Received ice candidate:", candidate);
+            audioSenderRef.current.addIceCandidate(
+              new RTCIceCandidate(candidate)
+            );
+          });
+
+          socket.current.on("call", (offer, room) => {
+            console.log("Received call offer:", offer);
+            audioSenderRef.current.setRemoteDescription(
+              new RTCSessionDescription(offer)
+            );
+
+            audioSenderRef.current
+              .createAnswer()
+              .then((answer) => {
+                audioSenderRef.current.setLocalDescription(answer);
+                socket.current.emit("answer", answer, room);
+              })
+              .catch((error) => {
+                console.error("Error creating answer:", error);
+              });
+          });
+
+          socket.current.on("answer", (answer, room) => {
+            audioSenderRef.current.setRemoteDescription(
+              new RTCSessionDescription(answer)
+            );
+          });
+
+          localAudioRef.current.srcObject = stream;
+        })
+        .catch((error) => {
+          console.error("Error accessing microphone:", error);
+        });
+    };
+
+    const cleanupAudioConnection = () => {
+      if (audioSenderRef.current) {
+        audioSenderRef.current.close();
+        audioSenderRef.current = null;
+      }
+
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach((track) => track.stop());
+        stream = null;
+      }
+    };
+
+    if (audioSenderRef.current && room) {
+      cleanupAudioConnection();
+    }
+
+    if (room) {
+      createAudioConnection();
+    }
+
+    return () => {
+      cleanupAudioConnection();
+    };
+  }, [room]);
 
   return (
     <div style={{ border: "2px solid red" }}>
@@ -132,10 +218,12 @@ const Draw = () => {
         </Layer>
       </Stage>
       {socket.current && (
-        <AudioChat
-          socket={socket.current}
-          room={room}
-          isConnected={isConnected}
+        <audio
+          key={room}
+          ref={localAudioRef}
+          autoPlay
+          controls
+          muted={!isConnected}
         />
       )}
     </div>
