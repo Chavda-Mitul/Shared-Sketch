@@ -28,14 +28,12 @@ function AudioChat({ socket, room, isConnected }) {
           };
 
           socket.on("iceCandidate", (candidate, room) => {
-            console.log("Received ice candidate:", candidate);
             audioSenderRef.current.addIceCandidate(
               new RTCIceCandidate(candidate)
             );
           });
 
           socket.on("call", (offer, room) => {
-            console.log("Received call offer:", offer);
             audioSenderRef.current.setRemoteDescription(
               new RTCSessionDescription(offer)
             );
