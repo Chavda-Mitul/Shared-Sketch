@@ -4,7 +4,6 @@ import io from "socket.io-client";
 function AudioChat({ socket, room, isConnected }) {
   const localAudioRef = useRef(null);
   const audioSenderRef = useRef(null);
-
   useEffect(() => {
     let stream;
 

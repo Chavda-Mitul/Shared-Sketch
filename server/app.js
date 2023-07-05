@@ -42,20 +42,6 @@ io.on("connection", (socket) => {
       socket.emit("drawing", []);
     }
   });
-  socket.on("iceCandidate", (candidate, roomId) => {
-    console.log("c", candidate);
-    socket.broadcast.to(roomId).emit("iceCandidate", candidate);
-  });
-
-  socket.on("call", (offer, roomId) => {
-    console.log(offer);
-    socket.broadcast.to(roomId).emit("call", offer);
-  });
-
-  socket.on("answer", (answer, roomId) => {
-    socket.broadcast.to(roomId).emit("answer", answer);
-    console.log(answer);
-  });
 
   socket.on("disconnect", () => {
     console.log("Client disconnected");
@@ -66,10 +52,3 @@ const port = process.env.PORT || 3000;
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
-/**
- * to do
- * user should able to create a room
- * user can clean in one button
- * user should able to edit image
- * - should add image
- */

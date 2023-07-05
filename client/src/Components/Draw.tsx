@@ -1,7 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Stage, Layer, Line, Text } from "react-konva";
 import { io } from "socket.io-client";
-import AudioChat from "./AudioChat";
 
 type LineData = {
   tool: string;
@@ -123,7 +122,7 @@ const Draw = () => {
   }, [lines]);
 
   return (
-    <div style={{ border: "2px solid red" }}>
+    <div style={{ border: "5px solid red" }}>
       <select
         value={tool}
         onChange={(e) => {
@@ -182,13 +181,6 @@ const Draw = () => {
           ))}
         </Layer>
       </Stage>
-      {socket.current && (
-        <AudioChat
-          socket={socket.current}
-          room={room}
-          isConnected={isConnected}
-        />
-      )}
     </div>
   );
 };
