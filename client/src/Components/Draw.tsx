@@ -141,12 +141,15 @@ const Draw = () => {
           <option value={20}>15</option>
         </select>
 
-        <input
-          type="color"
-          id="colorpicker"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-        />
+        <div className="min-w-full">
+          <input
+            type="color"
+            id="colorpicker"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="min-w-full"
+          />
+        </div>
         <button
           style={{ margin: "5px" }}
           onClick={() => clearAll(socket, lines, room)}
